@@ -11,6 +11,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { authClient } from "@/lib/auth-client";
 import { passwordSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -18,9 +19,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const resetPasswordSchema = z.object({
-  newPassword: passwordSchema,
-});
+const resetPasswordSchema = z
+  .object({
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
@@ -40,7 +47,21 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   });
 
   async function onSubmit({ newPassword }: ResetPasswordValues) {
-    // TODO: Handle password reset request
+    setError(null);
+    setSuccess(null);
+    const { error } = await authClient.resetPassword({
+      newPassword,
+      token,
+    });
+    if (error) {
+      setError(error.message || "Something went wrong");
+    } else {
+      setSuccess("Password reset successfully");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 3000);
+      form.reset();
+    }
   }
 
   const loading = form.formState.isSubmitting;
@@ -60,6 +81,24 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                     <PasswordInput
                       autoComplete="new-password"
                       placeholder="Enter new password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput
+                      autoComplete="confirm-password"
+                      placeholder="Confirm password"
                       {...field}
                     />
                   </FormControl>
