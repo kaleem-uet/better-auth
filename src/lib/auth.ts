@@ -18,6 +18,16 @@ export const auth = betterAuth({
       );
     },
   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+  },
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
@@ -29,6 +39,16 @@ export const auth = betterAuth({
     },
   },
   user: {
+    changeEmail: {
+      enabled: true,
+      async sendChangeEmailVerification({ user, newEmail, url }) {
+        await sendEmail(
+          user.email!,
+          "Verify your new email",
+          `Your email has been changed to ${newEmail}. Click the link to verify your new email: ${url}`
+        );
+      },
+    },
     additionalFields: {
       role: {
         type: "string",

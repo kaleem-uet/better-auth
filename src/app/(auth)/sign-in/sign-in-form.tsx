@@ -46,7 +46,7 @@ export function SignInForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const redirectTo = searchParams.get("redirect");
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -68,13 +68,25 @@ export function SignInForm() {
       setError(error.message || "Something went wrong");
     } else {
       toast.success("Signed in successfully");
-      router.push("/dashboard");
+      router.push(redirectTo ?? "/dashboard");
     }
     setLoading(false);
   }
 
   async function handleSocialSignIn(provider: "google" | "github") {
-    // TODO: Handle social sign in
+    setError(null);
+    setLoading(true);
+    const { error } = await authClient.signIn.social({
+      provider,
+      callbackURL: redirectTo ?? "/dashboard",
+    });
+    if (error) {
+      setError(error.message || "Something went wrong");
+    } else {
+      toast.success("Signed in successfully");
+      router.push(redirectTo ?? "/dashboard");
+    }
+    setLoading(false);
   }
 
   return (

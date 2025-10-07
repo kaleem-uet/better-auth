@@ -12,7 +12,7 @@ export default async function AdminPage() {
   const session = await getServerSession();
   const user = session?.user;
   if (!user) unauthorized();
-  if (user.role !== "admin") forbidden();
+  if (user.role !== "admin") unauthorized();
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12">
